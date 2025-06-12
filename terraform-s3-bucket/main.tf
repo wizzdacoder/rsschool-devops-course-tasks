@@ -13,7 +13,7 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "task1-s3-bucket" {
-  bucket = "my-task1-s3-bucket-777"
+  bucket = "my-task1-s3-bucket-888"
   acl    = "private"
 
   tags = {
