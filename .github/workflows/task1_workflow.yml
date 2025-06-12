@@ -27,7 +27,7 @@ jobs:
       - name: Terraform Init
         run: terraform init -backend-config="bucket=${{ env.YOUR_S3_BUCKET_FOR_TERRAFORM_STATE }}" -backend-config="key=terraform.tfstate" -backend-config="region=${{ env.YOUR_AWS_REGION }}"
         env:
-          YOUR_S3_BUCKET_FOR_TERRAFORM_STATE: my-task1-s3-bucket-888
+          YOUR_S3_BUCKET_FOR_TERRAFORM_STATE: my-task1-s3-bucket-777
           YOUR_AWS_REGION: us-east-1 
 
       - name: Terraform Format Check 
@@ -55,7 +55,7 @@ jobs:
       - name: Terraform Init
         run: terraform init -backend-config="bucket=${{ env.YOUR_S3_BUCKET_FOR_TERRAFORM_STATE }}" -backend-config="key=terraform.tfstate" -backend-config="region=${{ env.YOUR_AWS_REGION }}"
         env:
-          YOUR_S3_BUCKET_FOR_TERRAFORM_STATE: my-task1-s3-bucket-888
+          YOUR_S3_BUCKET_FOR_TERRAFORM_STATE: my-task1-s3-bucket-777
           YOUR_AWS_REGION: us-east-1 
 
       - name: Terraform Plan
@@ -85,7 +85,7 @@ jobs:
       - name: Terraform Init
         run: terraform init -backend-config="bucket=${{ env.YOUR_S3_BUCKET_FOR_TERRAFORM_STATE }}" -backend-config="key=terraform.tfstate" -backend-config="region=${{ env.YOUR_AWS_REGION }}"
         env:
-          YOUR_S3_BUCKET_FOR_TERRAFORM_STATE: my-task1-s3-bucket-888
+          YOUR_S3_BUCKET_FOR_TERRAFORM_STATE: my-task1-s3-bucket-777
           YOUR_AWS_REGION: us-east-1 
 
       - name: Terraform Apply 
