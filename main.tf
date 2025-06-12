@@ -9,12 +9,12 @@ terraform {
 }
 
 provider "aws" {
-  region  = "us-east-1"
+  region = "us-east-1"
 }
 
 resource "aws_s3_bucket" "task1-s3-bucket" {
   bucket = "my-task1-s3-bucket-777"
-  acl = "private"
+  acl    = "private"
 
   tags = {
     Name = "MyTaskBucket"
