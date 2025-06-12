@@ -9,8 +9,8 @@ on:
       - task_1
 
 permissions:
-  id-token: write 
-  contents: read 
+  id-token: write
+  contents: read
 
 jobs:
   terraform-check:
@@ -27,15 +27,49 @@ jobs:
       - name: Terraform Init
         run: terraform init -backend-config="bucket=${{ env.YOUR_S3_BUCKET_FOR_TERRAFORM_STATE }}" -backend-config="key=terraform.tfstate" -backend-config="region=${{ env.YOUR_AWS_REGION }}"
         env:
-          YOUR_S3_BUCKET_FOR_TERRAFORM_STATE: my-task1-s3-bucket-777
-          YOUR_AWS_REGION: us-east-1 
+          YOUR_S3_BUCKET_FOR_TERRAFORM_STATE: my-task1-s3-bucket-777 
+          YOUR_AWS_REGION: us-east-1
+        working-directory: task_1
 
-      - name: Terraform Format Check 
+      - name: Terraform Format Check
         run: terraform fmt -check
+        working-directory: task_1
 
   terraform-plan:
     runs-on: ubuntu-latest
     needs: terraform-check
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: "arn:aws:iam::156207844051:role/GithubActionsRole" 
+          aws-region: us-east-1 
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.2 
+
+      - name: Terraform Init
+        run: terraform init -backend-config="bucket=${{ env.YOUR_S3_BUCKET_FOR_TERRAFORM_STATE }}" -backend-config="key=terraform.tfstate" -backend-config="region=${{ env.YOUR_AWS_REGION }}"
+        env:
+          YOUR_S3_BUCKET_FOR_TERRAFORM_STATE: my-task1-s3-bucket-777
+          YOUR_AWS_REGION: us-east-1
+        working-directory: task_1
+
+      - name: Terraform Plan
+        run: terraform plan -input=false
+        working-directory: task_1
+
+  terraform-apply:
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/task_1'
 
     steps:
       - name: Checkout Code
@@ -50,43 +84,15 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.12.2
+          terraform_version: 1.12.2 
 
       - name: Terraform Init
         run: terraform init -backend-config="bucket=${{ env.YOUR_S3_BUCKET_FOR_TERRAFORM_STATE }}" -backend-config="key=terraform.tfstate" -backend-config="region=${{ env.YOUR_AWS_REGION }}"
         env:
           YOUR_S3_BUCKET_FOR_TERRAFORM_STATE: my-task1-s3-bucket-777
-          YOUR_AWS_REGION: us-east-1 
+          YOUR_AWS_REGION: us-east-1
+        working-directory: task_1
 
-      - name: Terraform Plan
-        run: terraform plan -input=false
-
-  terraform-apply:
-    runs-on: ubuntu-latest
-    needs: terraform-plan 
-
-    if: github.event_name == 'push' && github.ref == 'refs/heads/task_1'
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: "arn:aws:iam::156207844051:role/GithubActionsRole"
-          aws-region: us-east-1 
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.12.2
-
-      - name: Terraform Init
-        run: terraform init -backend-config="bucket=${{ env.YOUR_S3_BUCKET_FOR_TERRAFORM_STATE }}" -backend-config="key=terraform.tfstate" -backend-config="region=${{ env.YOUR_AWS_REGION }}"
-        env:
-          YOUR_S3_BUCKET_FOR_TERRAFORM_STATE: my-task1-s3-bucket-777
-          YOUR_AWS_REGION: us-east-1 
-
-      - name: Terraform Apply 
+      - name: Terraform Apply
         run: terraform apply -auto-approve -input=false
+        working-directory: task_1
