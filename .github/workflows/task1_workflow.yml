@@ -29,11 +29,11 @@ jobs:
         env:
           YOUR_S3_BUCKET_FOR_TERRAFORM_STATE: my-task1-s3-bucket-777 
           YOUR_AWS_REGION: us-east-1
-        working-directory: rsschool-devops-course-tasks
+        working-directory: .
 
       - name: Terraform Format Check
         run: terraform fmt -check
-        working-directory: rsschool-devops-course-tasks
+        working-directory: .
 
   terraform-plan:
     runs-on: ubuntu-latest
@@ -59,11 +59,11 @@ jobs:
         env:
           YOUR_S3_BUCKET_FOR_TERRAFORM_STATE: my-task1-s3-bucket-777
           YOUR_AWS_REGION: us-east-1
-        working-directory: rsschool-devops-course-tasks
+        working-directory: .
 
       - name: Terraform Plan
         run: terraform plan -input=false
-        working-directory: rsschool-devops-course-tasks
+        working-directory: .
 
   terraform-apply:
     runs-on: ubuntu-latest
@@ -91,8 +91,8 @@ jobs:
         env:
           YOUR_S3_BUCKET_FOR_TERRAFORM_STATE: my-task1-s3-bucket-777
           YOUR_AWS_REGION: us-east-1
-        working-directory: rsschool-devops-course-tasks
+        working-directory: .
 
       - name: Terraform Apply
         run: terraform apply -auto-approve -input=false
-        working-directory: rsschool-devops-course-tasks
+        working-directory: .
