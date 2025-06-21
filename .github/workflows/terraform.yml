@@ -1,35 +1,51 @@
-name: Terraform CI
+name: Terraform
 
 on:
   push:
-    branches: [main, task_2]
+    branches:
+      - task_2  # Cambia a la rama donde tengas el código Terraform
   pull_request:
-    branches: [main]
+    branches:
+      - main  # Puedes ajustar para que corra en PR hacia main
 
 jobs:
   terraform:
-    name: Terraform Workflow
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        shell: bash
-        working-directory: .
+    env:
+      AWS_REGION: us-east-1
+      TF_BUCKET: alan-k8s-terraform-state
+      TF_STATE_KEY: terraform.tfstate
+      TF_WORKING_DIR: ./  # Si tus archivos están en otra carpeta, cambialo
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.7.5
+          terraform_version: 1.5.0
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init \
+          -backend-config="bucket=${{ env.TF_BUCKET }}" \
+          -backend-config="key=${{ env.TF_STATE_KEY }}" \
+          -backend-config="region=${{ env.AWS_REGION }}"
 
       - name: Terraform Validate
         run: terraform validate
 
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/task_2' && github.event_name == 'push'  # Solo aplica al push directo a task_2
+        run: terraform apply -auto-approve tfplan
