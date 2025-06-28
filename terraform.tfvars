@@ -1,0 +1,5 @@
+aws_region = "us-east-1"
+vpc_cidr   = "10.0.0.0/16"
+ssh_key_name = "mi-clave-ec2"
+my_ip        =  "186.109.104.214/32"
+key_pair_name = "tu-key-name"
