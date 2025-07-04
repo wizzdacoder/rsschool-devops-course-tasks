@@ -110,6 +110,7 @@ hostname -I
 ### 8. Install K3s on Worker Node
 
 On the worker node:
+
 ```bash
 curl -sfL https://get.k3s.io | K3S_URL=https://<master-private-ip>:6443 K3S_TOKEN=<copied-token> sh -
 ```
@@ -198,6 +199,7 @@ You should see both the master and worker nodes listed.
 
 ---
 
+
 ## Final Tasks
 
 - Commit all Terraform code to `task_3` branch.
@@ -224,6 +226,3 @@ You should see both the master and worker nodes listed.
 ## Author
 
 Alan Demian Beltramo
-
----
-
