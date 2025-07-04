@@ -140,6 +140,66 @@ Ensure the pod named `nginx` is running.
 
 ---
 
+### 🖥️ Accessing the Cluster from Local Machine (Optional Task)
+
+To interact with the K3s cluster from your local computer using `kubectl`, follow these steps:
+
+#### 1. Download the K3s kubeconfig file
+
+From your local terminal, use `scp` to download the kubeconfig file from the master node via the bastion host:
+
+```bash
+scp -i ~/.ssh/task3keypair.pem \
+  -o ProxyCommand="ssh -i ~/.ssh/task3keypair.pem -W %h:%p ec2-user@<BASTION_PUBLIC_IP>" \
+  ec2-user@<MASTER_PRIVATE_IP>:/etc/rancher/k3s/k3s.yaml \
+  ./k3s.yaml
+```
+
+Replace `<BASTION_PUBLIC_IP>` and `<MASTER_PRIVATE_IP>` with the correct values.
+
+#### 2. Modify the kubeconfig file
+
+Edit `k3s.yaml` and replace the internal cluster endpoint with the **public IP of the bastion**, using SSH tunneling. Example:
+
+From:
+```yaml
+server: https://10.0.3.243:6443
+```
+
+To:
+```yaml
+server: https://localhost:6443
+```
+
+#### 3. Create SSH tunnel to the master node
+
+On your local terminal, open an SSH tunnel through the bastion host:
+
+```bash
+ssh -i ~/.ssh/task3keypair.pem -L 6443:<MASTER_PRIVATE_IP>:6443 ec2-user@<BASTION_PUBLIC_IP>
+```
+
+Leave this terminal open while using `kubectl`.
+
+#### 4. Export the KUBECONFIG
+
+In another terminal window:
+
+```bash
+export KUBECONFIG=./k3s.yaml
+```
+
+#### 5. Test the connection
+
+```bash
+kubectl get nodes
+```
+
+You should see both the master and worker nodes listed.
+
+---
+
+
 ## Final Tasks
 
 - Commit all Terraform code to `task_3` branch.
@@ -166,4 +226,3 @@ Ensure the pod named `nginx` is running.
 ## Author
 
 Alan Demian Beltramo
-

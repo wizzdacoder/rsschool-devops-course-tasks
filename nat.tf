@@ -15,7 +15,7 @@ resource "aws_instance" "nat" {
   associate_public_ip_address = true
   key_name                    = var.key_pair_name
   vpc_security_group_ids      = [aws_security_group.nat_sg.id]
-  source_dest_check           = false  # ✅ Necesario para que actúe como NAT
+  source_dest_check           = false # ✅ Necesario para que actúe como NAT
 
   user_data = <<-EOF
               #!/bin/bash
