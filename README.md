@@ -1,228 +1,129 @@
-# K3s Kubernetes Cluster Deployment on AWS (Task 3)
+# 🐍 Flask App Deployment with Helm (Task 5)
 
-This README describes the step-by-step process for setting up a K3s Kubernetes cluster on AWS using Terraform and a bastion host for access. It is part of the DevOps task_3 assignment.
-
----
-
-## Objective
-
-- Provision infrastructure on AWS using Terraform.
-- Deploy a K3s Kubernetes cluster with one master and one worker node.
-- Use a bastion host to securely access the private instances.
-- Verify the cluster using `kubectl`.
-- Deploy a test workload.
+This README documents the setup and deployment of a simple Flask application on a Kubernetes (Minikube) cluster using Helm. This task was completed as part of the DevOps course.
 
 ---
 
-## Technologies Used
+## ✅ Objective
 
-- AWS (Free Tier)
-- Terraform
-- EC2
-- K3s
-- SSH
-- GitHub + GitHub Actions
+- Create a Docker image for a Flask application.
+- Write a Helm chart to deploy the application.
+- Ensure the application is accessible via a web browser.
+- Document the setup and deployment process.
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
-.
-├── bastion.tf
-├── k3s-master.tf
-├── k3s-worker.tf
-├── nat.tf
-├── networking/
-│   ├── vpc.tf
-│   ├── subnets.tf
-│   ├── routes.tf
-│   ├── internet_gateway.tf
-│   └── security.tf
-├── backend.tf
-├── variables.tf
-├── terraform.tfvars
-├── outputs.tf
-├── .gitignore
-└── README.md
+task_5/
+├── flask-app/                 # Flask application and Dockerfile
+│   ├── app.py
+│   ├── Dockerfile
+│   └── templates/
+│       └── index.html
+│
+└── flask-app-chart/          # Helm chart
+    ├── Chart.yaml
+    ├── values.yaml
+    └── templates/
+        ├── deployment.yaml
+        └── service.yaml
 ```
 
 ---
 
-## Step-by-Step Guide
+## 🚀 Steps to Deploy
 
-### 1. Set Up the Git Branch
-
-```bash
-git checkout -b task_3
-```
-
-### 2. Create Key Pair
-
-- Manually created in AWS EC2 console.
-- Downloaded `.pem` file placed in project root.
-- `.gitignore` updated to exclude key.
-
-```
-task3keypair.pem
-```
-
-### 3. Provision Infrastructure with Terraform
+### 1. 🐳 Build and Push Docker Image
 
 ```bash
-terraform init
-terraform plan -out tfplan
-terraform apply -auto-approve tfplan
+cd flask-app/
+docker build -t <your-dockerhub-username>/flask-app:v1 .
+docker push <your-dockerhub-username>/flask-app:v1
 ```
 
-Resources created:
-- VPC, Subnets (public and private)
-- Internet Gateway
-- NAT Instance
-- Bastion Host (public subnet)
-- EC2 Instances for K3s master and worker (private subnet)
-
-### 4. Connect to Bastion Host
-
-```bash
-ssh -i task3keypair.pem ec2-user@<bastion-public-ip>
-```
-
-### 5. Connect from Bastion to K3s Master
-
-```bash
-ssh -i task3keypair.pem ec2-user@<private-ip-of-master>
-```
-
-### 6. Install K3s on Master
-
-```bash
-curl -sfL https://get.k3s.io | sh -
-```
-
-### 7. Retrieve Node Token and Master IP
-
-```bash
-sudo cat /var/lib/rancher/k3s/server/node-token
-hostname -I
-```
-
-### 8. Install K3s on Worker Node
-
-On the worker node:
-
-```bash
-curl -sfL https://get.k3s.io | K3S_URL=https://<master-private-ip>:6443 K3S_TOKEN=<copied-token> sh -
-```
-
-### 9. Verify Cluster from Master
-
-```bash
-sudo k3s kubectl get nodes
-```
-
-Expected output:
-- Two nodes (master and worker) with `STATUS = Ready`
-
-### 10. Deploy a Test Pod
-
-```bash
-sudo k3s kubectl apply -f https://k8s.io/examples/pods/simple-pod.yaml
-```
-
-### 11. Check All Resources
-
-```bash
-sudo k3s kubectl get all --all-namespaces
-```
-
-Ensure the pod named `nginx` is running.
+Update the `values.yaml` in your Helm chart to match the image name and tag.
 
 ---
 
-### 🖥️ Accessing the Cluster from Local Machine (Optional Task)
-
-To interact with the K3s cluster from your local computer using `kubectl`, follow these steps:
-
-#### 1. Download the K3s kubeconfig file
-
-From your local terminal, use `scp` to download the kubeconfig file from the master node via the bastion host:
+### 2. 🧪 Start Minikube and Set Docker Context (if needed)
 
 ```bash
-scp -i ~/.ssh/task3keypair.pem \
-  -o ProxyCommand="ssh -i ~/.ssh/task3keypair.pem -W %h:%p ec2-user@<BASTION_PUBLIC_IP>" \
-  ec2-user@<MASTER_PRIVATE_IP>:/etc/rancher/k3s/k3s.yaml \
-  ./k3s.yaml
+minikube start --driver=docker
 ```
 
-Replace `<BASTION_PUBLIC_IP>` and `<MASTER_PRIVATE_IP>` with the correct values.
-
-#### 2. Modify the kubeconfig file
-
-Edit `k3s.yaml` and replace the internal cluster endpoint with the **public IP of the bastion**, using SSH tunneling. Example:
-
-From:
-```yaml
-server: https://10.0.3.243:6443
-```
-
-To:
-```yaml
-server: https://localhost:6443
-```
-
-#### 3. Create SSH tunnel to the master node
-
-On your local terminal, open an SSH tunnel through the bastion host:
+Optional (to build Docker image directly in Minikube):
 
 ```bash
-ssh -i ~/.ssh/task3keypair.pem -L 6443:<MASTER_PRIVATE_IP>:6443 ec2-user@<BASTION_PUBLIC_IP>
+eval $(minikube docker-env)
 ```
-
-Leave this terminal open while using `kubectl`.
-
-#### 4. Export the KUBECONFIG
-
-In another terminal window:
-
-```bash
-export KUBECONFIG=./k3s.yaml
-```
-
-#### 5. Test the connection
-
-```bash
-kubectl get nodes
-```
-
-You should see both the master and worker nodes listed.
 
 ---
 
+### 3. 🧭 Deploy Helm Chart
 
-## Final Tasks
-
-- Commit all Terraform code to `task_3` branch.
-- Push to GitHub.
-- Open Pull Request (PR) to `main`.
-
----
-
-## Screenshots to Provide
-
-- `kubectl get nodes` output (2 nodes visible).
-- `kubectl get all --all-namespaces` output (nginx pod running).
+```bash
+helm install flask-app ./flask-app-chart -n flask --create-namespace
+```
 
 ---
 
-## Notes
+### 4. 🌐 Access the Application
 
-- Ensure `.terraform` and `.pem` files are excluded from Git.
-- Use GitHub Actions workflow for `terraform validate`, `plan` and `apply`.
-- Infrastructure uses Free Tier EC2 instances.
+```bash
+minikube service flask-app-flask-app-chart -n flask --url
+```
+
+Open the provided URL in your browser. You should see the Flask homepage rendered from `index.html`.
 
 ---
 
-## Author
+### 5. 🔍 Troubleshooting
 
-Alan Demian Beltramo
+To view logs:
+
+```bash
+kubectl logs -n flask <your-pod-name>
+```
+
+To describe pod and check events:
+
+```bash
+kubectl describe pod -n flask <your-pod-name>
+```
+
+---
+
+## 📸 Screenshots Required
+
+- ✅ Application running in the browser
+- ✅ `kubectl get all -n flask` output
+- ✅ Screenshot of `task_5` branch with code and chart committed
+
+---
+
+## 📝 Notes
+
+- The Flask app is a basic "Hello from Flask" webpage using Jinja2 templates.
+- The Helm chart creates a `Deployment` and a `NodePort` service.
+- The image is built from a custom `Dockerfile` that installs Flask and serves the app on port 5000.
+- The `index.html` must be inside a `templates/` directory for Flask to render it.
+
+---
+
+## 🧠 Learned Concepts
+
+- Dockerfile creation for Python apps
+- Building and pushing images to Docker Hub
+- Helm chart structure and usage
+- Deploying services on Minikube with Helm
+- Using Kubernetes to expose and manage containerized apps
+
+---
+
+## 🧑 Author
+
+Alan Demian Beltramo  
+DevOps Course – Task 5  
+July 2025
